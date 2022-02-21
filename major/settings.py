@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-#zrxx^e=ag=swu3&xx8aa^l9#)x#rd6#f!53p(3sn*8$^1rahn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['bokies.herokuapp.com','127.0.0.1:8000']
+ALLOWED_HOSTS = ['bokies.herokuapp.com','127.0.0.1']
 
 
 # Application definition
@@ -42,7 +42,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -80,7 +82,7 @@ DATABASES = {
         'NAME': 'major',
         'USER':'postgres',
         'PASSWORD':'1234',
-        'HOST':'localhost'
+        'HOST':'localhost',
     }
 }
 
