@@ -12,7 +12,6 @@ from django.contrib.auth.decorators import login_required
 from app.models import All
 
 # Create your views here.
-@login_required(login_url='signin')
 def history(request):
     all=All.objects.get(username=request.user.username)
     list=all.history.split(",")
@@ -27,7 +26,6 @@ def history(request):
 
 
 
-@login_required(login_url='signin')
 def update(request):
     if(request.method=='POST'):
         pk=request.user.username
@@ -47,7 +45,6 @@ def update(request):
 
 
 
-@login_required(login_url='signin')
 def index(request):
     book = pd.read_csv('Books.csv',dtype='unicode', sep=',')
     rating = pd.read_csv('Ratings.csv',dtype='unicode', sep=',')
@@ -87,7 +84,6 @@ def index(request):
     
     return render(request,"index.html",{'book':book,'l':l}) 
     
-@login_required(login_url='signin')
 def visit(request,pk):
     all=All.objects.get(username=request.user.username)
     if(all.history=="None"):
@@ -158,7 +154,6 @@ def visit(request,pk):
     avg=ceil(sum/tot)
     return render(request,"visit.html",{'res':res,'book':book,'s':pk,'l':l,'t':t,'avg':avg})
     
-@login_required(login_url='signin')
 def search(request):
         
     book = pd.read_csv('Books.csv',dtype='unicode', sep=',')
