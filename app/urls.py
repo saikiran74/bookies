@@ -8,6 +8,8 @@ urlpatterns=[
     path("index",views.index,name="index"),
     path("logout",views.logout,name="logout"),
     path("search",views.search,name="search"),
+    path("update",views.update,name="update"),
+    path("history",views.history,name="history"),
     path('visit/<str:pk>/',views.visit,name='visit'),
 
 ]
