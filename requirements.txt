@@ -28,7 +28,6 @@ django-heroku==0.3.1
 django-js-asset==2.0.0
 django-messages==0.6.0
 django-social-share==2.2.1
-docutils @ file:///C:/ci/docutils_1620828264669/work
 entrypoints==0.3
 et-xmlfile==1.1.0
 fonttools==4.25.0
