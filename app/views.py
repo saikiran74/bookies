@@ -67,7 +67,7 @@ def index(request):
 
     query_index=np.random.choice(mat.shape[0]) 
     #print(query_index)
-    distances,indices=model.kneighbors(mat.iloc[query_index,:].values.reshape(1,-1),n_neighbors=19) 
+    distances,indices=model.kneighbors(mat.iloc[query_index,:].values.reshape(1,-1),n_neighbors=31) 
 
     l=[]
     for i in range(0,len(distances.flatten())):
@@ -125,7 +125,7 @@ def visit(request,pk):
     model.fit(mat)
     query_index=pk
     #print(query_index)
-    distances,indices=model.kneighbors(mat.loc[query_index,:].values.reshape(1,-1),n_neighbors=19)
+    distances,indices=model.kneighbors(mat.loc[query_index,:].values.reshape(1,-1),n_neighbors=31)
     l=[]
     for i in range(0,len(distances.flatten())):
         if i==0:
