@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-#zrxx^e=ag=swu3&xx8aa^l9#)x#rd6#f!53p(3sn*8$^1rahn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['bokies.herokuapp.com']
+ALLOWED_HOSTS = ['bokies.herokuapp.com','127.0.0.1']
 
 
 # Application definition
@@ -79,18 +79,26 @@ WSGI_APPLICATION = 'major.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
+'''DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'major',
+        'USER':'postgres',
+        'PASSWORD':'1234',
+        'HOST':'localhost',
+    }
+}
+'''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'davsm2ah7kq3a4',
         'USER':'erzilnbwduaffw',
         'PASSWORD':'2a7b348859df70e4968d2b981992da13abd83862014886ca8a66f2d47fe767fe',
-        'HOST': 'ec2-3-227-195-74.compute-1.amazonaws.com'
+        'HOST': 'ec2-3-227-195-74.compute-1.amazonaws.com',
         'PORT': '5432',
     }
 }
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
