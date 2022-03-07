@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
-from pathlib import Path,os
+from pathlib import Path, os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-#zrxx^e=ag=swu3&xx8aa^l9#)x#rd6#f!53p(3sn*8$^1rahn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['bokies.herokuapp.com','127.0.0.1']
+ALLOWED_HOSTS = ['bokies.herokuapp.com', '127.0.0.1']
 
 
 # Application definition
@@ -87,6 +87,7 @@ DATABASES = {
         'USER':'postgres',
         'PASSWORD':'1234',
         'HOST':'localhost',
+        'PORT': '5432',
     }
 }
 
