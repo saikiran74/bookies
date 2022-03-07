@@ -62,12 +62,36 @@
                         <img style="padding-bottom: 10px; width:70%; height: 100%;" src="{{ob.imageurll}}"/>
                     </div>
                         <div class="col-sm-6">
-                            <h5>Book Title: {{ob.booktitle}}</h5>
+                            <div class="row">
+                                <div class="col-4"><h5>Book Title:</h5></div>
+                                <div class="col-8"><h5>{{ob.booktitle}}</h5></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-4"><h5>Author:  </h5></div>
+                                <div class="col-8"><h5>{{ob.bookauthor}}</h5></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-4"><h5>Publication year:  </h5></div>
+                                <div class="col-8"><h5>{{ob.yearofpublication}}</h5></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-4"><h5>Publisher:  </h5></div>
+                                <div class="col-8"><h5>{{ob.publisher}}</h5></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-4"><h5>Total ratings:</h5></div>
+                                <div class="col-8"><h5>{{t}}</h5></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-4"><h5>Total ratings:  </h5></div>
+                                <div class="col-8"><h5>{{avg}}/10</h5></div>
+                            </div>
+                            <!--<h5>Book Title: {{ob.booktitle}}</h5>
                             <h5>Author:  {{ob.bookauthor}}</h5>
                             <h5>Publication year:  {{ob.yearofpublication}}</h5>
                             <h5>Publisher:  {{ob.publisher}}</h5>
                             <h5>Total ratings:  {{t}}</h5>
-                            <h5>Total ratings:  {{avg}}</h5>
+                            <h5>Total ratings:  {{avg}}</h5>-->
                         </div>
                 </div>
             </div>
