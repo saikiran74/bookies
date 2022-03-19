@@ -1,0 +1,1 @@
+web gunicorn major.wsgi:application --log-file - 
