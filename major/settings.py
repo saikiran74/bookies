@@ -9,12 +9,10 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
-
+import django_heroku
 from pathlib import Path,os
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -25,7 +23,7 @@ SECRET_KEY = 'django-insecure-#zrxx^e=ag=swu3&xx8aa^l9#)x#rd6#f!53p(3sn*8$^1rahn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['bokies.herokuapp.com']
+ALLOWED_HOSTS = ['bokies.herokuapp.com', '127.0.0.1']
 
 
 # Application definition
@@ -69,17 +67,13 @@ TEMPLATES = [
         },
     },
 ]
-'''import dj_database_url
-db_from_env=dj_database_url.config(conn_max_age=600)
-DATABASES['default'].update(db_from_env)
-'''
 
-WSGI_APPLICATION = 'major.wsgi.application'
+#WSGI_APPLICATION = 'major.wsgi.application'
 
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-
+'''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -89,7 +83,17 @@ DATABASES = {
         'HOST':'localhost',
     }
 }
-
+'''
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'davsm2ah7kq3a4',
+        'USER':'erzilnbwduaffw',
+        'PASSWORD':'2a7b348859df70e4968d2b981992da13abd83862014886ca8a66f2d47fe767fe',
+        'HOST':'ec2-3-227-195-74.compute-1.amazonaws.com',
+        'PORT': '5432',
+    }
+}
 
 
 # Password validation
@@ -128,14 +132,14 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS=[
-    os.path.join(BASE_DIR, 'static')
+    os.path.join(BASE_DIR, 'static') 
 ]
+
 STATIC_ROOT=os.path.join(BASE_DIR, 'assests')
 
 MEDIA_ROOT=os.path.join(BASE_DIR,'media')
 MEDIA_URL='/media/'
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
-
+django_heroku.settings(locals())
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

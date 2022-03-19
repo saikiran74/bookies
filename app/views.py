@@ -1,31 +1,91 @@
 from math import ceil
+from sys import flags
 from django.shortcuts import render
 from django.contrib.auth.models import User,auth
 import csv
 from django.contrib import messages
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect,get_object_or_404
 import pandas as pd
 import numpy as np
 from scipy.sparse import csr_matrix
 from sklearn.neighbors import NearestNeighbors
 from django.contrib.auth.decorators import login_required
-from app.models import All
-
+from app.models import All,Like
+from csv import DictWriter
 # Create your views here.
+def rating(request,pk):
+    if(request.method=="POST"):
+        rating = pd.read_csv('Ratings.csv',dtype='unicode', sep=',')
+        user = pd.read_csv('Users.csv',dtype='unicode', sep=',')
+        rating.columns=['userid','ISBN','bookrating']
+        user.columns=['userid','location','age']
+        ratinggiven= request.POST['rating']
+        print("rating given",ratinggiven)
+        print(pk)
+        print(request.user.id)
+        #rating.loc[len(rating.index)] = [request.user.id, pk, ratinggiven] 
+        dic= {'userid':request.user.id, "ISBN":pk, "bookrating":ratinggiven}
+        with open('Ratings.csv', 'a') as f_object:
+            dictwriter_object = DictWriter(f_object, fieldnames=rating.columns)
+            dictwriter_object.writerow(dic)
+            print("done successfully")
+            f_object.close()
+        return redirect('index')
+
+
+
+
+def likepage(request):
+    tmp=Like.objects.filter(username=request.user.username).filter(like="like")
+    book = pd.read_csv('Books.csv',dtype='unicode', sep=',')
+    book.columns=['ISBN','booktitle','bookauthor','yearofpublication','publisher' ,'imageurll']
+    book=book.to_dict('records')
+    return render(request,"like.html",{"tmp":tmp,'book':book})
+
+def like(request,pk): 
+    book = pd.read_csv('Books.csv',dtype='unicode', sep=',')
+    like=Like()
+    book.columns=['ISBN','booktitle','bookauthor','yearofpublication','publisher' ,'imageurll']
+    tmp=Like.objects.all()
+    book=book[book['ISBN']==pk]
+    book=book['ISBN'].tolist()
+    flag=False
+    for i in tmp:
+        if(str(i.username)==str(request.user.username) and i.ISBN==book[0]):
+            flag=True
+            if(i.like=="dislike"):
+                i.like="like"
+            else:
+                i.like="dislike"
+            i.save()
+    if(flag==False):
+        like.username=request.user
+        like.ISBN=book[0]
+        like.like="like"
+        like.save()
+    return redirect('likepage')
+
+
+
+
+
+
+@login_required(login_url='signin')
 def history(request):
     all=All.objects.get(username=request.user.username)
     list=all.history.split(",")
-    print(list)
-    list=list[::-1]
-    print(list)
+    #print(list)
+    list=list[::-1] 
+    #print(list)
     book = pd.read_csv('Books.csv',dtype='unicode', sep=',')
-    book.columns=['ISBN','booktitle','bookauthor','yearofpublication','publisher','imageurls','imageurlm','imageurll']
+    book.columns=['ISBN','booktitle','bookauthor','yearofpublication','publisher' ,'imageurll']
 
     book=book.to_dict('records')
     return render(request,"history.html",{'l':list,'book':book})
 
 
 
+@login_required(login_url='signin')
 def update(request):
     if(request.method=='POST'):
         pk=request.user.username
@@ -45,11 +105,12 @@ def update(request):
 
 
 
+@login_required(login_url='signin')
 def index(request):
     book = pd.read_csv('Books.csv',dtype='unicode', sep=',')
     rating = pd.read_csv('Ratings.csv',dtype='unicode', sep=',')
     user = pd.read_csv('Users.csv',dtype='unicode', sep=',')    
-    book.columns=['ISBN','booktitle','bookauthor','yearofpublication','publisher','imageurls','imageurlm','imageurll']
+    book.columns=['ISBN','booktitle','bookauthor','yearofpublication','publisher' ,'imageurll']
     rating.columns=['userid','ISBN','bookrating']
     user.columns=['userid','location','age']
     
@@ -66,35 +127,34 @@ def index(request):
     model.fit(mat)
 
     query_index=np.random.choice(mat.shape[0]) 
-    #print(query_index)
-    distances,indices=model.kneighbors(mat.iloc[query_index,:].values.reshape(1,-1),n_neighbors=31) 
+    print(query_index)
+    distances,indices=model.kneighbors(mat.iloc[query_index,:].values.reshape(1,-1),n_neighbors=6)
 
     l=[]
     for i in range(0,len(distances.flatten())):
         if i==0:
             pass
-            #print("Recommended {0}:\n".format(mat.index[query_index])) 
+            print("Recommended {0}:\n".format(mat.index[query_index])) 
         else:
-            #print("{0}:{1},with of {2}:".format(i,mat.index[indices.flatten()[i]],distances.flatten()[i]))
+            print("{0}:{1},with of {2}:".format(i,mat.index[indices.flatten()[i]],distances.flatten()[i]))
             l.append(mat.index[indices.flatten()[i]])
-    #print(l)
+    print(l)
     
 
     book=book.to_dict('records')
     
     return render(request,"index.html",{'book':book,'l':l}) 
     
+@login_required(login_url='signin')
 def visit(request,pk):
     all=All.objects.get(username=request.user.username)
     if(all.history=="None"):
         all.history=""
         all.history+=pk 
         historylist=all.history.split(",")
-        print(historylist)
     else:
         str=""
         historylist=all.history.split(",")
-        print(historylist)
         if(pk in historylist):
             print("true")
             historylist.remove(pk)
@@ -110,7 +170,7 @@ def visit(request,pk):
     book = pd.read_csv('Books.csv',dtype='unicode', sep=',')
     rating = pd.read_csv('Ratings.csv',dtype='unicode', sep=',')
     user = pd.read_csv('Users.csv',dtype='unicode', sep=',')    
-    book.columns=['ISBN','booktitle','bookauthor','yearofpublication','publisher','imageurls','imageurlm','imageurll']
+    book.columns=['ISBN','booktitle','bookauthor','yearofpublication','publisher' ,'imageurll']
     rating.columns=['userid','ISBN','bookrating']
     user.columns=['userid','location','age']
 
@@ -120,12 +180,12 @@ def visit(request,pk):
     fin=pd.merge(rating,book,on="ISBN")
     filloc=pd.merge(fin,user,on="userid")
     filloc=filloc.drop_duplicates(['userid','booktitle'])
-    mat=filloc.pivot(index='booktitle',columns="userid",values="bookrating").fillna(0)
+    mat=filloc.pivot(index='booktitle',columns="userid",values="bookrating").fillna(0) 
     model=NearestNeighbors(metric="cosine",algorithm="brute")
     model.fit(mat)
     query_index=pk
     #print(query_index)
-    distances,indices=model.kneighbors(mat.loc[query_index,:].values.reshape(1,-1),n_neighbors=31)
+    distances,indices=model.kneighbors(mat.loc[query_index,:].values.reshape(1,-1),n_neighbors=6)
     l=[]
     for i in range(0,len(distances.flatten())):
         if i==0:
@@ -136,8 +196,8 @@ def visit(request,pk):
             l.append(mat.index[indices.flatten()[i]])
     #print(l)
     #print("pk is",pk)
-    res=book[(book['booktitle']==pk)]
-    res=res.to_dict('records')
+    res1=book[(book['booktitle']==pk)]
+    res=res1.to_dict('records')
     book=book.to_dict('records')
     #total rating count
     filter=fin[fin['booktitle']==pk]
@@ -152,8 +212,18 @@ def visit(request,pk):
             sum+=int(list[i])
             tot+=1
     avg=ceil(sum/tot)
-    return render(request,"visit.html",{'res':res,'book':book,'s':pk,'l':l,'t':t,'avg':avg})
+    #like
+    tmp=Like.objects.all()
+    likebook=res1['ISBN'].tolist()
+    like="None"
+    for i in tmp:
+        if(i.username==request.user.username and i.ISBN==likebook[0] and i.like=="like"):
+            like="liked"
+        else:
+            like="None"
+    return render(request,"visit.html",{'res':res,'book':book,'s':pk,'l':l,'t':t,'avg':avg,'like':like})
     
+@login_required(login_url='signin')
 def search(request):
         
     book = pd.read_csv('Books.csv',dtype='unicode', sep=',')
@@ -217,7 +287,7 @@ def signin(request):
 
 def logout(request):
     auth.logout(request)
-    return redirect('/')
+    return redirect('signin')
 
 '''
 
