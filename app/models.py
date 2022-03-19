@@ -7,9 +7,9 @@ class All(models.Model):
     firstname=models.CharField(max_length=2000,default="None")
     lastname=models.CharField(max_length=5000,default="None")
     email=models.CharField(max_length=5000,default="None")
-    country=models.CharField(max_length=500,default="None")
+    country=models.CharField(max_length=500,default="India")
     history=models.CharField(max_length=50000,default="")
-    age=models.IntegerField(default=0)
+    age=models.IntegerField(default=18)
 
     #country=models.ForeignKey(Country,on_delete=models.CASCADE,null=True)
     def __str__(self):
