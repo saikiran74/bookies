@@ -74,7 +74,7 @@
                         </div>
                         <div class="row">
                             <div class="col-4"><h5>Author </h5></div>
-                            <div class="col-8"><h5>: {{ob.bookauthor}}</h5></div>
+                            <div class="col-8"><h5>: <a href="{% url 'author' ob.bookauthor %}">{{ob.bookauthor}}</a></h5></div>
                         </div>
                         <div class="row">
                             <div class="col-4"><h5>Publication year </h5></div>
@@ -82,7 +82,7 @@
                         </div>
                         <div class="row">
                             <div class="col-4"><h5>Publisher </h5></div>
-                            <div class="col-8"><h5>: {{ob.publisher}}</h5></div>
+                            <div class="col-8"><h5>:<a href="{% url 'publisher' ob.publisher %}">{{ob.publisher}}</a></h5></div>
                         </div>
                         <div class="row">
                             <div class="col-4"><h5>Total ratings</h5></div>
@@ -155,7 +155,7 @@
         <div class="row">
             {% for i in authorbookdic %} 
                 <div class="col-sm-2"> 
-                    <a href="#">
+                    <a href="{% url 'visit' i.booktitle%}">
                         <img style="width: 100%; height: 70%; padding-bottom: 10px;"  src="{{i.imageurll}}"/>
                     </a>
                     <h6>{{i.booktitle}}</h6>
@@ -171,7 +171,7 @@
         <div class="row">
             {% for i in publisherbookdic %} 
                 <div class="col-sm-2"> 
-                    <a href="#">
+                    <a href="{% url 'visit' i.booktitle%}">
                         <img style="width: 100%; height: 70%; padding-bottom: 10px;"  src="{{i.imageurll}}"/>
                     </a>
                     <h6>{{i.booktitle}}</h6>
@@ -186,7 +186,7 @@
                 <div class="col-sm-3">
                     <h3>Developer</h3>
                     <li>Sai kiran</li>
-                    <li>Jasmin</li>
+                    <li>Jasmine</li>
                     <li>Kiran</li>
                     <li>Akash</li>
                 </div>

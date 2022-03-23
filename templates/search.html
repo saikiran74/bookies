@@ -25,7 +25,7 @@
                             <form action="{% url 'search' %}" method="POST">
                                 {% csrf_token %}
                                 <div class="input-group" style="padding-top: 2px;">
-                                    <input type="text" class="form-control" placeholder="Search" name="search" required>
+                                    <input type="text" class="form-control" placeholder="Search" name="search" >
                                     <div class="input-group-append">
                                         <button class="btn btn-primary" type="submit"  style="height: 38px; border-bottom-right-radius: 5px; border-top-right-radius: 5px;" ><span class="material-icons">search</span></button>
                                     </div>
@@ -48,25 +48,28 @@
         </div>
     </nav>
     <br><br><br><br>
+    
     <div class="container">
         <h5 style="color: rgb(0, 58, 218);">Search result of "{{s}}"</h5><br><br>
         <div class="row">
-            {% for ob in res %}
-                <div class="col-sm-5">
-                    <a class="btn" >
-                        <img style="padding-bottom: 10px;" src="{{ob.imageurll}}"/>
-                    </a>
-                </div>
-                <div class="col-sm-6">
-                    <h5>Book Title: {{ob.booktitle}}</h5>
-                    <h5>Author:  {{ob.bookauthor}}</h5>
-                    <h5>Publication year:  {{ob.yearofpublication}}</h5>
-                    <h5>Publisher:  {{ob.publisher}}</h5>
-                <br>
+            {% for j in l %} 
+                {% for i in book %} 
+                    {% if j == i.ISBN %} 
+                    <div class="col-sm-5">
+                        <a class="btn" >
+                            <img style="padding-bottom: 10px;" src="{{i.imageurll}}"/>
+                        </a>
+                    </div>
+                    <div class="col-sm-6">
+                        <h5>Book Title: {{i.booktitle}}</h5>
+                        <h5>Author:  {{i.bookauthor}}</h5>
+                        <h5>Publication year:  {{i.yearofpublication}}</h5>
+                        <h5>Publisher:  {{i.publisher}}</h5>
+                    <br>
 
-                </div>
-            {% empty %}
-            <h5 style="padding-top: 150px; padding-bottom: 150px;">No result found for "{{s}}"</h5>
+                    </div>
+                    {% endif %}
+                {% endfor %}
             {% endfor %}
             <br><br><br>
         </div>

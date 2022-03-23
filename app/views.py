@@ -13,6 +13,25 @@ from django.contrib.auth.decorators import login_required
 from app.models import All,Like
 from csv import DictWriter
 # Create your views here.
+
+def landingpage(request):
+    return render(request,"landingpage.html")
+
+
+
+def author(request,pk):
+    authorbook = pd.read_csv('Books.csv',dtype='unicode', sep=',')
+    authorbook=authorbook[(authorbook['bookauthor']==pk)]
+    author=authorbook.to_dict('records')
+    return render(request,"author.html",{'author':author,'pk':pk})
+    
+def publisher(request,pk):
+    publisherbook = pd.read_csv('Books.csv',dtype='unicode', sep=',')
+    publisherbook=publisherbook[(publisherbook['publisher']==pk)]
+    publisher=publisherbook.to_dict('records')
+    return render(request,"publisher.html",{'publisher':publisher,'pk':pk})
+
+
 def rating(request,pk):
     if(request.method=="POST"):
         rating = pd.read_csv('Ratings.csv',dtype='unicode', sep=',')
@@ -20,15 +39,15 @@ def rating(request,pk):
         rating.columns=['userid','ISBN','bookrating']
         user.columns=['userid','location','age']
         ratinggiven= request.POST['rating']
-        print("rating given",ratinggiven)
-        print(pk)
-        print(request.user.id)
+        #print("rating given",ratinggiven)
+        #print(pk)
+        #print(request.user.id)
         #rating.loc[len(rating.index)] = [request.user.id, pk, ratinggiven] 
         dic= {'userid':request.user.id, "ISBN":pk, "bookrating":ratinggiven}
         with open('Ratings.csv', 'a') as f_object:
             dictwriter_object = DictWriter(f_object, fieldnames=rating.columns)
             dictwriter_object.writerow(dic)
-            print("done successfully")
+            #print("done successfully")
             f_object.close()
         return redirect('index')
 
@@ -127,24 +146,84 @@ def index(request):
     model.fit(mat)
 
     query_index=np.random.choice(mat.shape[0]) 
-    print(query_index)
+    #print(query_index)
     distances,indices=model.kneighbors(mat.iloc[query_index,:].values.reshape(1,-1),n_neighbors=6)
 
     l=[]
     for i in range(0,len(distances.flatten())):
         if i==0:
             pass
-            print("Recommended {0}:\n".format(mat.index[query_index])) 
+            #print("Recommended {0}:\n".format(mat.index[query_index])) 
         else:
-            print("{0}:{1},with of {2}:".format(i,mat.index[indices.flatten()[i]],distances.flatten()[i]))
+            #print("{0}:{1},with of {2}:".format(i,mat.index[indices.flatten()[i]],distances.flatten()[i]))
             l.append(mat.index[indices.flatten()[i]])
-    print(l)
+    #print(l)
     
 
     book=book.to_dict('records')
     
     return render(request,"index.html",{'book':book,'l':l}) 
+
+@login_required(login_url='signin')
+def bookvisit(request,pk):
+    #history
+    all=All.objects.get(username=request.user.username)
+    if(all.history=="None"):
+        all.history=""
+        all.history+=pk 
+        historylist=all.history.split(",")
+    else:
+        str=""
+        historylist=all.history.split(",")
+        if(pk in historylist):
+            #print("true")
+            historylist.remove(pk)
+        for i in range(len(historylist)):
+            if(i==0):
+                str+=historylist[i]
+            else:
+                str+=","+historylist[i]
+        str+=","+pk
+        all.history=str 
+    all.save()
+
+    book = pd.read_csv('Books.csv',dtype='unicode', sep=',')
+    rating = pd.read_csv('Ratings.csv',dtype='unicode', sep=',')
+    user = pd.read_csv('Users.csv',dtype='unicode', sep=',')    
+    book.columns=['ISBN','booktitle','bookauthor','yearofpublication','publisher' ,'imageurll']
+    rating.columns=['userid','ISBN','bookrating']
+    user.columns=['userid','location','age']
+    book=book.drop_duplicates(['booktitle','ISBN'])
     
+    res1=book[(book['booktitle']==pk)]
+    res=res1.to_dict('records')
+    book=book.to_dict('records')
+    #my ratings
+    filter=rating[rating['ISBN'].str.contains(res[0]['ISBN'])] 
+    coun=filter['ISBN'].value_counts()
+    t=coun[0]
+    #for average rating
+    list=filter['bookrating'].tolist()
+    tot=0
+    sum=0
+    for i in range(len(list)):
+        if(list[i]!='0'):
+            sum+=int(list[i])
+            tot+=1
+    avg=ceil(sum/tot)
+    #like
+    tmp=Like.objects.all()
+    likebook=res1['ISBN'].tolist()
+    like="None"
+    for i in tmp:
+        if(i.username==request.user.username and i.ISBN==likebook[0] and i.like=="like"):
+            like="liked"
+        else:
+            like="None"
+    
+    return render(request,"bookvisit.html",{'res':res,'book':book,'t':t,'avg':avg,'s':pk,'like':like})
+    #'t':t,'avg':avg,
+
 @login_required(login_url='signin')
 def visit(request,pk):
     all=All.objects.get(username=request.user.username)
@@ -175,11 +254,11 @@ def visit(request,pk):
     book.columns=['ISBN','booktitle','bookauthor','yearofpublication','publisher' ,'imageurll']
     rating.columns=['userid','ISBN','bookrating']
     user.columns=['userid','location','age']
-
     count=rating['ISBN'].value_counts()
     rating=rating[rating['ISBN'].isin(count[count>=50].index)] 
-    book=book.drop_duplicates(['booktitle'])
+    book=book.drop_duplicates(['booktitle','ISBN'])
     fin=pd.merge(rating,book,on="ISBN")
+    res=fin[fin['booktitle']==pk]
     filloc=pd.merge(fin,user,on="userid")
     filloc=filloc.drop_duplicates(['userid','booktitle'])
     mat=filloc.pivot(index='booktitle',columns="userid",values="bookrating").fillna(0) 
@@ -224,6 +303,17 @@ def visit(request,pk):
         else:
             like="None"
     #publisher books
+    fin=fin.drop_duplicates(['booktitle','ISBN'])
+    
+    print(res[0]['publisher'])
+    publisherbook=fin[fin['publisher']==res[0]['publisher']]
+    publisherbookdic=publisherbook.to_dict('records')
+    #author books
+    print(res[0]['bookauthor'])
+    authorbook=fin[(fin['bookauthor']==res[0]['bookauthor'])]
+    authorbookdic=authorbook.to_dict('records')
+    '''
+    #publisher books
     print(res[0]['publisher'])
     publisherbook=publisherbook[publisherbook['publisher']==res[0]['publisher']]
     publisherbookdic=publisherbook.to_dict('records')
@@ -231,20 +321,33 @@ def visit(request,pk):
     print(res[0]['bookauthor'])
     authorbook=authorbook[(authorbook['bookauthor']==res[0]['bookauthor'])]
     authorbookdic=authorbook.to_dict('records')
-    
+    '''
+
     return render(request,"visit.html",{'res':res,'book':book,'s':pk,'l':l,'t':t,'avg':avg,'like':like,'authorbookdic':authorbookdic,'publisherbookdic':publisherbookdic})
-    
 @login_required(login_url='signin')
 def search(request):
-        
     book = pd.read_csv('Books.csv',dtype='unicode', sep=',')
-    
+    if request.method=='POST':
+        search=request.POST['search'] 
+        #res=book[book['booktitle'].str.contains(search)] 
+        #res=res.to_dict('records')
+        book=book.to_dict('records')
+        search=search.lower()
+        l=[]
+        count=0
+        for i in book:
+            if(search in i['booktitle'].lower()):
+                l.append(i['ISBN'])
+                count+=1
+        return render(request,'search.html',{'book':book,'s':search,'l':l}) 
+    '''
     if request.method=='POST':
         search=request.POST['search'] 
         res=book[book['booktitle'].str.contains(search)] 
         res=res.to_dict('records')
         #res=Books.objects.filter(BookTitle__contains=search)
         return render(request,'search.html',{'res':res,'s':search}) 
+    '''
 
 def createaccount(request):
     if request.method=='POST':
@@ -272,7 +375,7 @@ def createaccount(request):
                 tmp.country=request.POST['country']
                 user.save()
                 tmp.save()
-                print("User created in create account also")
+                #print("User created in create account also")
                 return render(request,'signin.html')
         else:
             messages.info(request,'password did not matched')
@@ -299,21 +402,3 @@ def signin(request):
 def logout(request):
     auth.logout(request)
     return redirect('signin')
-
-'''
-
-    with open("Books.csv") as f:
-            reader = csv.reader(f)
-            for row in reader:
-                ob=Books()
-                ob.ISBN=row[0]
-                ob.BookTitle=row[1]
-                ob.BookAuthor=row[2]
-                ob.YearOfPublication=row[3]
-                ob.Publisher=row[4]
-                ob.ImageURLS=row[5]
-                ob.ImageURLM=row[6]
-                ob.ImageURLL=row[7]
-                ob.save()
-    
-'''
