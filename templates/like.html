@@ -58,7 +58,7 @@
                     {% if j.ISBN == i.ISBN %} 
                        
                         <div class="col-sm-2"> 
-                            <a href="{% url 'bookvisit' i.booktitle %}">
+                            <a href="{% url 'bookvisit' i.ISBN %}">
                                 <img style="width: 100%; height: 70%; padding-bottom: 10px;"  src="{{i.imageurll}}"/>
                             </a>
                             <h6>{{i.booktitle}}</h6>

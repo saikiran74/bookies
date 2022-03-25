@@ -24,13 +24,14 @@ def author(request,pk):
     authorbook=authorbook[(authorbook['bookauthor']==pk)]
     author=authorbook.to_dict('records')
     return render(request,"author.html",{'author':author,'pk':pk})
-    
+
+
 def publisher(request,pk):
+
     publisherbook = pd.read_csv('Books.csv',dtype='unicode', sep=',')
-    publisherbook=publisherbook[(publisherbook['publisher']==pk)]
+    #publisherbook=publisherbook[(publisherbook['publisher']==pk)]
     publisher=publisherbook.to_dict('records')
     return render(request,"publisher.html",{'publisher':publisher,'pk':pk})
-
 
 def rating(request,pk):
     if(request.method=="POST"):
@@ -132,58 +133,44 @@ def index(request):
     book.columns=['ISBN','booktitle','bookauthor','yearofpublication','publisher' ,'imageurll']
     rating.columns=['userid','ISBN','bookrating']
     user.columns=['userid','location','age']
+    #Top rated boook
+    number_rating=pd.DataFrame(rating.groupby('ISBN')['bookrating'].count())
+    tmp=number_rating.sort_values('bookrating',ascending=False).reset_index()
+    #print(tmp.head(12))
+    toprated=pd.merge(tmp,book,on="ISBN")
+    toprated=toprated.head(12)
+    #print(toprated)
+    toprated=toprated.to_dict('records')
+    #top author
+    topauthor=book['bookauthor'].value_counts().head(12).index.tolist()
+    #top publisher
+    toppublisher=book['publisher'].value_counts().head(12).index.tolist()
+   
+    return render(request,"index.html",{'toprated':toprated,'topauthor':topauthor,'toppublisher':toppublisher}) 
     
-    count=rating['ISBN'].value_counts()
-    rating=rating[rating['ISBN'].isin(count[count>=50].index)] 
-    book=book.drop_duplicates(['booktitle'])
-    fin=pd.merge(rating,book,on="ISBN")
-    filloc=pd.merge(fin,user,on="userid")
     
-    filloc=filloc.drop_duplicates(['userid','booktitle'])
-    mat=filloc.pivot(index='booktitle',columns="userid",values="bookrating").fillna(0)
-
-    model=NearestNeighbors(metric="cosine",algorithm="brute")
-    model.fit(mat)
-
-    query_index=np.random.choice(mat.shape[0]) 
-    #print(query_index)
-    distances,indices=model.kneighbors(mat.iloc[query_index,:].values.reshape(1,-1),n_neighbors=6)
-
-    l=[]
-    for i in range(0,len(distances.flatten())):
-        if i==0:
-            pass
-            #print("Recommended {0}:\n".format(mat.index[query_index])) 
-        else:
-            #print("{0}:{1},with of {2}:".format(i,mat.index[indices.flatten()[i]],distances.flatten()[i]))
-            l.append(mat.index[indices.flatten()[i]])
-    #print(l)
     
-
-    book=book.to_dict('records')
-    
-    return render(request,"index.html",{'book':book,'l':l}) 
 
 @login_required(login_url='signin')
-def bookvisit(request,pk):
+def bookvisit(request,id):
     #history
     all=All.objects.get(username=request.user.username)
     if(all.history=="None"):
         all.history=""
-        all.history+=pk 
+        all.history+=id 
         historylist=all.history.split(",")
     else:
         str=""
         historylist=all.history.split(",")
-        if(pk in historylist):
+        if(id in historylist):
             #print("true")
-            historylist.remove(pk)
+            historylist.remove(id)
         for i in range(len(historylist)):
             if(i==0):
                 str+=historylist[i]
             else:
                 str+=","+historylist[i]
-        str+=","+pk
+        str+=","+id
         all.history=str 
     all.save()
 
@@ -195,13 +182,13 @@ def bookvisit(request,pk):
     user.columns=['userid','location','age']
     book=book.drop_duplicates(['booktitle','ISBN'])
     
-    res1=book[(book['booktitle']==pk)]
+    res1=book[(book['ISBN']==id)]
     res=res1.to_dict('records')
     book=book.to_dict('records')
     #my ratings
     filter=rating[rating['ISBN'].str.contains(res[0]['ISBN'])] 
     coun=filter['ISBN'].value_counts()
-    t=coun[0]
+    #t=coun[0]
     #for average rating
     list=filter['bookrating'].tolist()
     tot=0
@@ -210,7 +197,10 @@ def bookvisit(request,pk):
         if(list[i]!='0'):
             sum+=int(list[i])
             tot+=1
-    avg=ceil(sum/tot)
+    if(sum>0 and tot>0):
+        avg=ceil(sum/tot)
+    else:
+        avg=0
     #like
     tmp=Like.objects.all()
     likebook=res1['ISBN'].tolist()
@@ -220,16 +210,15 @@ def bookvisit(request,pk):
             like="liked"
         else:
             like="None"
-    
-    return render(request,"bookvisit.html",{'res':res,'book':book,'t':t,'avg':avg,'s':pk,'like':like})
+    return render(request,"bookvisit.html",{'res':res,'book':book,'t':tot,'avg':avg,'like':like})
     #'t':t,'avg':avg,
 
 @login_required(login_url='signin')
-def visit(request,pk):
+def visit(request,id,pk):
     all=All.objects.get(username=request.user.username)
     if(all.history=="None"):
         all.history=""
-        all.history+=pk 
+        all.history+=id
         historylist=all.history.split(",")
     else:
         str=""
@@ -242,7 +231,7 @@ def visit(request,pk):
                 str+=historylist[i]
             else:
                 str+=","+historylist[i]
-        str+=","+pk
+        str+=","+id
         all.history=str 
     all.save()
 
@@ -255,7 +244,7 @@ def visit(request,pk):
     rating.columns=['userid','ISBN','bookrating']
     user.columns=['userid','location','age']
     count=rating['ISBN'].value_counts()
-    rating=rating[rating['ISBN'].isin(count[count>=50].index)] 
+    rating=rating[rating['ISBN'].isin(count[count>=50].index)]
     book=book.drop_duplicates(['booktitle','ISBN'])
     fin=pd.merge(rating,book,on="ISBN")
     res=fin[fin['booktitle']==pk]
@@ -277,13 +266,13 @@ def visit(request,pk):
             l.append(mat.index[indices.flatten()[i]])
     #print(l)
     #print("pk is",pk)
-    res1=book[(book['booktitle']==pk)]
+    res1=book[(book['ISBN']==id)]
     res=res1.to_dict('records')
     book=book.to_dict('records')
     #total rating count
-    filter=fin[fin['booktitle']==pk]
+    filter=fin[fin['ISBN']==id]
     coun=filter['booktitle'].value_counts()
-    t=coun[0]
+    #t=coun[0]
     #for average rating
     list=filter['bookrating'].tolist()
     tot=0
@@ -292,7 +281,10 @@ def visit(request,pk):
         if(list[i]!='0'):
             sum+=int(list[i])
             tot+=1
-    avg=ceil(sum/tot)
+    if(sum>0 and tot>0):
+        avg=ceil(sum/tot)
+    else:
+        avg=0
     #like
     tmp=Like.objects.all()
     likebook=res1['ISBN'].tolist()
@@ -305,25 +297,15 @@ def visit(request,pk):
     #publisher books
     fin=fin.drop_duplicates(['booktitle','ISBN'])
     
-    print(res[0]['publisher'])
+    #print(res[0]['publisher'])
     publisherbook=fin[fin['publisher']==res[0]['publisher']]
     publisherbookdic=publisherbook.to_dict('records')
     #author books
-    print(res[0]['bookauthor'])
+    #print(res[0]['bookauthor'])
     authorbook=fin[(fin['bookauthor']==res[0]['bookauthor'])]
     authorbookdic=authorbook.to_dict('records')
-    '''
-    #publisher books
-    print(res[0]['publisher'])
-    publisherbook=publisherbook[publisherbook['publisher']==res[0]['publisher']]
-    publisherbookdic=publisherbook.to_dict('records')
-    #author books
-    print(res[0]['bookauthor'])
-    authorbook=authorbook[(authorbook['bookauthor']==res[0]['bookauthor'])]
-    authorbookdic=authorbook.to_dict('records')
-    '''
 
-    return render(request,"visit.html",{'res':res,'book':book,'s':pk,'l':l,'t':t,'avg':avg,'like':like,'authorbookdic':authorbookdic,'publisherbookdic':publisherbookdic})
+    return render(request,"visit.html",{'res':res,'book':book,'s':pk,'l':l,'t':tot,'avg':avg,'like':like,'authorbookdic':authorbookdic,'publisherbookdic':publisherbookdic})
 @login_required(login_url='signin')
 def search(request):
     book = pd.read_csv('Books.csv',dtype='unicode', sep=',')
@@ -340,15 +322,7 @@ def search(request):
                 l.append(i['ISBN'])
                 count+=1
         return render(request,'search.html',{'book':book,'s':search,'l':l}) 
-    '''
-    if request.method=='POST':
-        search=request.POST['search'] 
-        res=book[book['booktitle'].str.contains(search)] 
-        res=res.to_dict('records')
-        #res=Books.objects.filter(BookTitle__contains=search)
-        return render(request,'search.html',{'res':res,'s':search}) 
-    '''
-
+    
 def createaccount(request):
     if request.method=='POST':
         tmp=All()

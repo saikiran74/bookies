@@ -13,8 +13,8 @@ urlpatterns=[
     path("update",views.update,name="update"),
     path("history",views.history,name="history"),
     path("like/<str:pk>/",views.like,name="like"),
-    path('visit/<str:pk>/',views.visit,name='visit'),
-    path('bookvisit/<str:pk>/',views.bookvisit,name='bookvisit'),
+    path('visit/<str:id>/<str:pk>/',views.visit,name='visit'),
+    path('bookvisit/<str:id>/',views.bookvisit,name='bookvisit'),
     path('publisher/<str:pk>/',views.publisher,name='publisher'),
     path("author/<str:pk>/",views.author,name="author"),
 ]
