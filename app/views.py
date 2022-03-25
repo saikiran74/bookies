@@ -13,26 +13,26 @@ from django.contrib.auth.decorators import login_required
 from app.models import All,Like
 from csv import DictWriter
 # Create your views here.
-
+@login_required(login_url='signin')
 def landingpage(request):
     return render(request,"landingpage.html")
 
 
-
+@login_required(login_url='signin')
 def author(request,pk):
     authorbook = pd.read_csv('Books.csv',dtype='unicode', sep=',')
     authorbook=authorbook[(authorbook['bookauthor']==pk)]
     author=authorbook.to_dict('records')
     return render(request,"author.html",{'author':author,'pk':pk})
 
-
+@login_required(login_url='signin')
 def publisher(request,pk):
 
     publisherbook = pd.read_csv('Books.csv',dtype='unicode', sep=',')
     #publisherbook=publisherbook[(publisherbook['publisher']==pk)]
     publisher=publisherbook.to_dict('records')
     return render(request,"publisher.html",{'publisher':publisher,'pk':pk})
-
+@login_required(login_url='signin')
 def rating(request,pk):
     if(request.method=="POST"):
         rating = pd.read_csv('Ratings.csv',dtype='unicode', sep=',')
@@ -54,14 +54,14 @@ def rating(request,pk):
 
 
 
-
+@login_required(login_url='signin')
 def likepage(request):
     tmp=Like.objects.filter(username=request.user.username).filter(like="like")
     book = pd.read_csv('Books.csv',dtype='unicode', sep=',')
     book.columns=['ISBN','booktitle','bookauthor','yearofpublication','publisher' ,'imageurll']
     book=book.to_dict('records')
     return render(request,"like.html",{"tmp":tmp,'book':book})
-
+@login_required(login_url='signin')
 def like(request,pk): 
     book = pd.read_csv('Books.csv',dtype='unicode', sep=',')
     like=Like()
@@ -133,7 +133,21 @@ def index(request):
     book.columns=['ISBN','booktitle','bookauthor','yearofpublication','publisher' ,'imageurll']
     rating.columns=['userid','ISBN','bookrating']
     user.columns=['userid','location','age']
-    #Top rated boook
+    #Top rated books related to age and location
+    all=All.objects.get(username=request.user.username)
+    print(all.country)
+    s=str(all.age)+".0"
+    print(s)
+    fin=pd.merge(book,rating,on="ISBN")
+    fin1=pd.merge(fin,user,on="userid")
+    fin2=fin1[fin1['location'].str.contains(all.country)]
+    fin2=fin2[fin2['age']==s]
+    print(fin2)
+    number_rating=pd.DataFrame(fin2.groupby('ISBN')['bookrating'].count())
+    tmp=number_rating.sort_values('bookrating',ascending=False).head(12).reset_index()
+    final=pd.merge(tmp,book,on="ISBN")
+    finres=final.to_dict('records')
+    #Top rated book
     number_rating=pd.DataFrame(rating.groupby('ISBN')['bookrating'].count())
     tmp=number_rating.sort_values('bookrating',ascending=False).reset_index()
     #print(tmp.head(12))
@@ -145,8 +159,8 @@ def index(request):
     topauthor=book['bookauthor'].value_counts().head(12).index.tolist()
     #top publisher
     toppublisher=book['publisher'].value_counts().head(12).index.tolist()
-   
-    return render(request,"index.html",{'toprated':toprated,'topauthor':topauthor,'toppublisher':toppublisher}) 
+
+    return render(request,"index.html",{'toprated':toprated,'finres':finres,'topauthor':topauthor,'toppublisher':toppublisher}) 
     
     
     
